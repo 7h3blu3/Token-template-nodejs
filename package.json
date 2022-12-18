@@ -4,7 +4,7 @@
     "dev": "nodemon server.js"
   },
   "engines": {
-    "node": "14.x"
+    "node": "14.17.3"
   },
   "private": true,
   "dependencies": {
