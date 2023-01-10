@@ -6,7 +6,9 @@ const mongoose = require("mongoose");
 const authRoutes = require("./routes/auth")
 const userRoutes = require("./routes/auth")
 
-const MONGODB_URI = 'mongodb+srv://7h3blu3:73XBU9fI69AV8jTk@cluster0.dm69koz.mongodb.net/assessment?retryWrites=true&w=majority'
+require('dotenv').config()
+
+const MONGODB_URI = 'mongodb+srv://' + process.env.mongoDb +'@cluster0.dm69koz.mongodb.net/assessment?retryWrites=true&w=majority'
 
 const app = express();
 
