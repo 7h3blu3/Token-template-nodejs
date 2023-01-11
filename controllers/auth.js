@@ -1,17 +1,14 @@
 const crypto = require('crypto');
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const nodemailer = require('nodemailer');
-const sendgridTransport = require("nodemailer-sendgrid-transport")
+
+const sgMail = require('@sendgrid/mail')
 
 const User = require("../models/user");
 
-const transporter = nodemailer.createTransport(sendgridTransport({
-  auth: {
-    // api_key: "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"
-  }
-})
-)
+require('dotenv').config()
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY)
 
 exports.postUserSignUp = (req, res, next) => {
   bcrypt.hash(req.body.password, 10).then((hash) => {
@@ -101,10 +98,7 @@ exports.postResetPassword = (req, res, next) => {
         return user.save();
       })
       .then(result => {
-        res.status(200).json({
-          message:"Email sent successfully."
-        })
-        transporter.sendMail({
+        const msg = {
           to: req.body.email,
           from: 'milen.krasimirov.deyanov@gmail.com',
           subject: 'Password reset',
@@ -112,7 +106,18 @@ exports.postResetPassword = (req, res, next) => {
             <p>You requested a password reset</p>
             <p>Click this <a href="${environment}/auth/new-password/${token}">link</a> to set a new password.</p>
           `
-        });
+        }
+        sgMail
+          .send(msg)
+          .then(() => {
+            res.status(200).json({
+              message: "Email sent successfully."
+            })
+            console.log('Email sent')
+          })
+          .catch((error) => {
+            console.error(error)
+          })
       })
       .catch(err => {
         console.log(err);
@@ -124,11 +129,11 @@ exports.getNewPassword = (req, res, next) => {
   const token = req.params.token;
   User.findOne({ resetToken: token, resetTokenExpiration: { $gt: Date.now() } })
     .then(user => {
-        console.log(user)
-        res.status(201).json({
-          userId: user._id.toString(),
-          passwordToken: token
-        });
+      console.log(user)
+      res.status(201).json({
+        userId: user._id.toString(),
+        passwordToken: token
+      });
     })
     .catch(err => {
       console.log(err);
@@ -141,7 +146,7 @@ exports.postNewPassword = (req, res, next) => {
   const passwordToken = req.body.passwordToken;
   let resetUser;
 
-  if(!userId){
+  if (!userId) {
     return res.status(404).json({
       message: "The link for password reset was used or expired. Please request a new one."
     })
@@ -163,7 +168,7 @@ exports.postNewPassword = (req, res, next) => {
     })
     .then(result => {
       console.log("result ", result)
-      res.status(200).json({message:"Successfull reset"});
+      res.status(200).json({ message: "Successfull reset" });
     })
     .catch(err => {
       console.log("err", err);
